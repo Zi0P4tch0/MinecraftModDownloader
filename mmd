@@ -97,7 +97,7 @@ def process_download_link(download_link):
     download_file(download_link, download_filename)
 
 def find_best_available_download(url, minecraft_version):
-    driver = webdriver.PhantomJS()
+    driver = webdriver.Chrome()
     driver.set_window_size(1280,720)
     driver.get(url)
     try:
@@ -114,7 +114,7 @@ def find_best_available_download(url, minecraft_version):
     sort_by_version_link.click()
     while True:
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        rows = soup.findAll('tbody')[0].findChildren('tr')
+        rows = soup.findAll('table', {'class': 'listing'})[0].findChildren('tbody')[0].findChildren('tr')
         for row in rows:
             columns = row.findChildren('td')
             mod_mc_version = columns[2].string
