@@ -25,7 +25,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from tabulate import tabulate
 import urllib
-from urllib import quote
 import urllib2
 import urlparse
 
@@ -72,7 +71,7 @@ def download_file(url, output):
     response.close()
 
 def search_mod(mod, page=1):
-    url = 'https://mods.curse.com/search/get-results?mods-page=%d&providerIdent=Mods&search=%s' % (page, quote(mod))
+    url = 'https://mods.curse.com/search/get-results?mods-page=%d&providerIdent=Mods&search=%s' % (page, urllib.quote(mod))
     soup = BeautifulSoup(download_page(url), 'html.parser')
     rows = soup.findAll('tr', {'class': 'minecraft'})
     mods = []
