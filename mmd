@@ -24,8 +24,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from tabulate import tabulate
+import urllib
 from urllib import quote
 import urllib2
+import urlparse
 
 USER_AGENT = UserAgent().random
 
@@ -53,8 +55,16 @@ def download_page(url):
     response.close()
     return html
 
+def url_fix(s, charset='utf-8'):
+    if isinstance(s, unicode):
+        s = s.encode(charset, 'ignore')
+    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
+    path = urllib.quote(path, '/%')
+    qs = urllib.quote_plus(qs, ':&=')
+    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+
 def download_file(url, output):
-    request = urllib2.Request(url, headers={'User-Agent': USER_AGENT})
+    request = urllib2.Request(url_fix(url), headers={'User-Agent': USER_AGENT})
     response = urllib2.urlopen(request)
     with open(output, 'wb') as f:
         f.write(response.read())
