@@ -4,7 +4,7 @@
 
 Usage:
   mmd search <mod>
-  mmd download --minecraft-version=<version> <mod>
+  mmd download --minecraft-version=<version> <mod>...
   mmd (-h | --help)
   mmd --version
 
@@ -97,7 +97,7 @@ def process_download_link(download_link):
     download_file(download_link, download_filename)
 
 def find_best_available_download(url, minecraft_version):
-    driver = webdriver.Chrome()
+    driver = webdriver.PhantomJS()
     driver.set_window_size(1280,720)
     driver.get(url)
     try:
@@ -156,4 +156,5 @@ if __name__ == '__main__':
         if not has_phantomjs():
             print 'Could not find PhantomJS.'
         else:
-            download_mod(arguments['<mod>'], arguments['--minecraft-version'])
+            for mod in arguments['<mod>']:
+                download_mod(mod, arguments['--minecraft-version'])
