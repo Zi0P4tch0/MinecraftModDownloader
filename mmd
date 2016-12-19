@@ -4,7 +4,7 @@
 
 Usage:
   mmd search <mod>
-  mmd download --minecraft-version=<version> <mod>...
+  mmd download --minecraft-version=<version> <mods>...
   mmd (-h | --help)
   mmd --version
 
@@ -165,5 +165,5 @@ if __name__ == '__main__':
         if not has_phantomjs():
             print 'Could not find PhantomJS.'
         else:
-            for mod in arguments['<mod>']:
+            for mod in arguments['<mods>']:
                 download_mod(mod, arguments['--minecraft-version'])
