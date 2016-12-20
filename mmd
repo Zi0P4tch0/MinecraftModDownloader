@@ -25,16 +25,19 @@
 #################################################################################
 
 """Minecraft Mod Downloader.
+Written by Matteo Pacini <m@matteopacini.me>.
+Licensed under MIT license.
 
 Usage:
   mmd search <mod>
-  mmd download --minecraft-version=<version> <mods>...
+  mmd download [--minecraft-version=<version>] <mods>...
   mmd (-h | --help)
   mmd --version
 
 Options:
-  -h --help     Show this screen.
-  --version     Show version.
+  -h --help                         Show this screen.
+  --version                         Show version.
+  --minecraft-version=<version>     Desired Minecraft version [default: 1.7.10].
 
 """
 from docopt import docopt
