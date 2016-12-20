@@ -2,7 +2,7 @@
 
 LATEST_TAG=$(git tag -l | tail -n 1)
 MACOS_VERSION=$(sw_vers -productVersion)
-ZIP="mmd-$LATEST_TAG-macOS$MACOS_VERSION.zip"
+ZIP="mmd-$LATEST_TAG-macOS$MACOS_VERSION+.zip"
 TMP_DIR=$(mktemp -d)
 
 git reset --hard && git clean -xdf
