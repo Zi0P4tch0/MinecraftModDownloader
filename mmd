@@ -47,6 +47,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+import sys
 from tabulate import tabulate
 import urllib
 import urllib2
@@ -130,7 +131,13 @@ def process_download_link(download_link):
     download_file(download_link, download_filename)
 
 def find_best_available_download(url, minecraft_version):
-    driver = webdriver.PhantomJS()
+    if sys.platform == 'darwin':
+        phantomjs_exe = '%s/phantomjs' % sys.platform
+    elif sys.platform == 'win32':
+        phantomjs_exe = '%s/phantomjs.exe' % sys.platform
+    else:
+        print '[ERROR] Unsupported platform: "%s".' % sys.platform
+    driver = webdriver.PhantomJS(executable_path=phantomjs_exe)
     driver.set_window_size(1280,720)
     driver.get(url)
     try:
@@ -171,14 +178,6 @@ def sort_mods_by_similarity(mods, mod):
 def pretty_print_mods(mods):
     print tabulate(map(lambda x: x.to_tabulate_row(), mods), headers=['Mod', 'Author', 'Downloads'])
 
-def has_phantomjs():
-    try:
-        driver = webdriver.PhantomJS()
-        driver.quit()
-        return True
-    except:
-        return False
-
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='0.1')
     if arguments['search']:
@@ -186,8 +185,5 @@ if __name__ == '__main__':
         sorted_mods = sort_mods_by_similarity(mods, arguments['<mod>'])
         pretty_print_mods(sorted_mods)
     if arguments['download']:
-        if not has_phantomjs():
-            print 'Could not find PhantomJS.'
-        else:
-            for mod in arguments['<mods>']:
-                download_mod(mod, arguments['--minecraft-version'])
+        for mod in arguments['<mods>']:
+            download_mod(mod, arguments['--minecraft-version'])
