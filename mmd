@@ -139,8 +139,7 @@ def find_best_available_download(url, minecraft_version):
     elif sys.platform == 'win32':
         phantomjs_exe = '%s/phantomjs.exe' % sys.platform
     else:
-        print '[ERROR] Unsupported platform: "%s".' % sys.platform
-        return
+        raise Exception('Unsupported platform: "%s".' % sys.platform)
     driver = webdriver.PhantomJS(executable_path=phantomjs_exe)
     driver.set_window_size(1280,720)
     driver.get(url)
