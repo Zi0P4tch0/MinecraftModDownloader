@@ -58,20 +58,20 @@ USER_AGENT = UserAgent().random
 
 class Mod(object):
 
-    def __init__(self, name, author, downloads, href):
+    def __init__(self, name, author, last_update, href):
         self.name = name
         self.author = author
-        self.downloads = downloads
+        self.last_update = last_update
         self.href = 'https://mods.curse.com' + href
 
     def __str__(self):
-        return '<Mod name="%s" author="%s" downloads="%s">' % (self.name, self.author, self.downloads)
+        return '<Mod name="%s" author="%s" lastUpdate="%s">' % (self.name, self.author, self.last_update)
 
     def __repr__(self):
         return self.__str__()
 
     def to_tabulate_row(self):
-        return [self.name, self.author, self.downloads]
+        return [self.name, self.author, self.last_update]
 
 def download_page(url):
     request = urllib.request.Request(url, headers={'User-Agent': USER_AGENT})
@@ -95,17 +95,16 @@ def download_file(url, output):
     response.close()
 
 def search_mod(mod, page=1):
-    url = 'https://mods.curse.com/search/get-results?mods-page=%d&providerIdent=Mods&search=%s' % (page, urllib.parse.quote(mod))
+    url = 'https://minecraft.curseforge.com/search/get-results?projects-page=%d&providerIdent=projects&search=%s' % (page, urllib.parse.quote(mod))
     soup = BeautifulSoup(download_page(url), 'html.parser')
-    rows = soup.findAll('tr', {'class': 'minecraft'})
+    rows = soup.findAll('tr', {'class': 'results'})
     mods = []
     for row in rows:
-        columns = row.findChildren('td')
-        mod_name = columns[0].findChildren('a')[0].string.strip()
-        mod_author = columns[0].findChildren('a')[1].string.strip()
-        mod_downloads = columns[3].findChildren('dt')[0].string.strip()
-        mod_href = columns[0].findChildren('a')[0]['href']
-        mods.append(Mod(mod_name, mod_author, mod_downloads, mod_href))
+        mod_name = row.findChildren('div', {'class':'results-name'})[0].findChildren('a')[0].string.strip()
+        mod_author = row.findChildren('td', {'class':'results-owner'})[0].findChildren('a')[0].string.strip()
+        mod_href = row.findChildren('div', {'class':'results-name'})[0].findChildren('a')[0]['href'].strip()
+        mod_last_update = row.findChildren('td', {'class':'results-date'})[0].findChildren('abbr')[0].string.strip()
+        mods.append(Mod(mod_name, mod_author, mod_last_update, mod_href))
     next_button = soup.findAll('a', text='Next')
     if len(next_button) == 0:
         return mods
@@ -175,10 +174,10 @@ def sort_mods_by_similarity(mods, mod):
     return sorted(mods, key=lambda x: SequenceMatcher(None, x.name, mod).ratio(), reverse=True)
 
 def pretty_print_mods(mods):
-    print(tabulate([x.to_tabulate_row() for x in mods], headers=['Mod', 'Author', 'Downloads']))
+    print(tabulate([x.to_tabulate_row() for x in mods], headers=['Mod', 'Author', 'Last Updated On']))
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='0.1')
+    arguments = docopt(__doc__, version='0.2')
     if arguments['search']:
         mods = search_mod(arguments['<mod>'])
         sorted_mods = sort_mods_by_similarity(mods, arguments['<mod>'])
