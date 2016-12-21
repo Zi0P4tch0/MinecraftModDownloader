@@ -62,7 +62,7 @@ class Mod(object):
         self.name = name
         self.author = author
         self.last_update = last_update
-        self.href = 'https://mods.curse.com' + href
+        self.href = 'https://minecraft.curseforge.com' + href
 
     def __str__(self):
         return '<Mod name="%s" author="%s" lastUpdate="%s">' % (self.name, self.author, self.last_update)
@@ -122,13 +122,7 @@ def download_mod(mod, minecraft_version):
         else:
             process_download_link(download_link)
 
-def process_download_link(download_link):
-    soup = BeautifulSoup(download_page(download_link), 'html.parser')
-    download_link = soup.findAll('a', {'class': 'download-link'})[0]['data-href']
-    download_filename = os.path.basename(os.path.normpath(download_link))
-    download_file(download_link, download_filename)
-
-def find_best_available_download(url, minecraft_version):
+def prepare_selenium_driver():
     if sys.platform == 'darwin':
         phantomjs_exe = '%s/phantomjs' % sys.platform
     elif sys.platform == 'win32':
@@ -137,33 +131,48 @@ def find_best_available_download(url, minecraft_version):
         raise Exception('Unsupported platform: "%s".' % sys.platform)
     driver = webdriver.PhantomJS(executable_path=phantomjs_exe)
     driver.set_window_size(1280,720)
+    return driver
+
+def process_download_link(download_link):
+    soup = BeautifulSoup(download_page(download_link), 'html.parser')
+    download_link = soup.findAll('div',{'class':'project-file-download-button-large'})[0].findAll('a', {'class':'fa-icon-download'})[0]['href']
+    download_filename = soup.findAll('div', {'class':'details-info'})[0].findChildren('li')[0].findChildren('div', {'class':'info-data'})[0].string.strip()
+    download_file('https://minecraft.curseforge.com' + download_link, download_filename)
+
+def find_best_available_download(url, minecraft_version):
+    driver = prepare_selenium_driver()
     driver.get(url)
     try:
         fucking_cookie_button = driver.find_element_by_xpath('/html/body/div[1]/div/a[1]')
         fucking_cookie_button.click()
     except:
         pass
-    other_downloads_link = driver.find_element_by_xpath('//*[@id="about-project"]/div/ul/li[3]/a')
-    other_downloads_link.click()
+    files_link = driver.find_element_by_xpath('//*[@id="site-main"]/section[2]/nav/div/ul/li[3]/a')
+    files_link.click()
     WebDriverWait(driver, 10).until(
-        EC.visibility_of_element_located((By.XPATH, '//*[@id="tab-other-downloads"]/div/div[2]/table/thead/tr/th[3]/a'))
+        EC.visibility_of_element_located((By.XPATH, '//*[@id="content"]/section/div/div[2]/div[2]/table/thead/tr/th[5]/a'))
     )
-    sort_by_version_link = driver.find_element_by_xpath('//*[@id="tab-other-downloads"]/div/div[2]/table/thead/tr/th[3]/a')
+    sort_by_version_link = driver.find_element_by_xpath('//*[@id="content"]/section/div/div[2]/div[2]/table/thead/tr/th[5]/a')
+    sort_by_version_link.click()
+    WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.XPATH, '//*[@id="content"]/section/div/div[2]/div[2]/table/thead/tr/th[5]/a'))
+    )
+    sort_by_version_link = driver.find_element_by_xpath('//*[@id="content"]/section/div/div[2]/div[2]/table/thead/tr/th[5]/a')
     sort_by_version_link.click()
     while True:
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        rows = soup.findAll('table', {'class': 'listing'})[0].findChildren('tbody')[0].findChildren('tr')
+        rows = soup.findAll('tr', {'class': 'project-file-list-item'})
         for row in rows:
-            columns = row.findChildren('td')
-            mod_mc_version = columns[2].string
+            mod_mc_version = row.findAll('span',{'class':'version-label'})[0].string.strip()
             if mod_mc_version == minecraft_version:
                 driver.quit()
-                return 'https://mods.curse.com' + columns[0].findChildren('a')[0]['href']
+                mod_download_link = row.findAll('div', {'class':'project-file-name-container'})[0].findChildren('a')[0]['href'].strip()
+                return 'https://minecraft.curseforge.com' + mod_download_link
         try:
             next_button = driver.find_element_by_link_text('Next')
             next_button.click()
             WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.XPATH, '//*[@id="tab-other-downloads"]/div/div[2]/table/thead/tr/th[3]/a'))
+                EC.visibility_of_element_located((By.XPATH, '//*[@id="content"]/section/div/div[2]/div[2]/table/thead/tr/th[5]/a'))
             )
         except:
             break
